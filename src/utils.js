@@ -1,5 +1,5 @@
 import { utils } from '@summa-tx/bitcoin-spv-js';
-import { ecrecover } from 'ethereumjs-util';
+import * as ethUtil from 'ethereumjs-util';
 
 
 export function getProvider() {
@@ -31,7 +31,12 @@ export function extractVRS(srvStr) {
 
 export function recoverPubkey(msgHash, srvStr) {
   const { v, r, s } = extractVRS(srvStr);
-  return ecrecover(msgHash, v, r, s);
+  return ethUtil.ecrecover(msgHash, v, r, s);
+}
+
+export function recoverPersonal(message, srvStr) {
+  const msgHash = ethUtil.hashPersonalMessage(message);
+  return recoverPubkey(msgHash, srvStr);
 }
 
 // Transform eth_sign result to a DER signature
@@ -53,12 +58,18 @@ export async function getPublicKey() {
   const message = 'Allow this page to view your Bitcoin public key.';
   const currentAccount = await provider.enable()[0];
 
-  // THIS IS BORKED
-  const cb = (result) => {
-    const signature = result.result;
-  };
-  provider.sendAsync({
-    method: 'personal_sign',
-    params: [currentAccount, message]
-  }, cb);
+  return new Promise((resolve, reject) => {
+    // THIS IS BORKED
+    const cb = (err, result) => {
+      if (err) reject(err);
+
+      const signature = result.result;
+      const pubkey = recoverPersonal(message, signature);
+      resolve(pubkey);
+    };
+    provider.sendAsync({
+      method: 'personal_sign',
+      params: [currentAccount, message]
+    }, cb);
+  });
 }
