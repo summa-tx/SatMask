@@ -1,5 +1,6 @@
-import * as utils from './utils';
-import * as tx from './tx';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
 
-
-export default { tx, utils };
+ReactDOM.render(<App />, document.getElementById('root'));

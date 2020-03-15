@@ -1,5 +1,4 @@
 import { utils } from '@summa-tx/bitcoin-spv-js';
-
 import * as sigs from './sigs';
 
 function hash256(buf) {
