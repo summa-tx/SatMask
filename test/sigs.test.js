@@ -2,7 +2,7 @@
 import { assert } from 'chai';
 import { utils } from '@summa-tx/bitcoin-spv-js';
 
-import { srvToDER } from '../src/utils';
+import { srvToDER } from '../src/sigs';
 
 
 describe('utils', () => {

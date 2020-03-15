@@ -1,5 +1,6 @@
 import { utils } from '@summa-tx/bitcoin-spv-js';
 
+import * as sigs from './sigs';
 
 function hash256(buf) {
   return utils.sha256(utils.sha256(buf));
@@ -15,8 +16,8 @@ export function wpkhWitness(pubkey, signature) {
 }
 
 export function appendWitness(tx, pubkey, signature) {
-  const timelock = utils.safeSlice(tx, -4);
-  const body = utils.safeSlice(tx, 0, -4);
+  const timelock = utils.safeSlice(tx, tx.length - 4);
+  const body = utils.safeSlice(tx, 0, tx.length - 4);
   return utils.concatUint8Arrays(
     body,
     wpkhWitness(pubkey, signature),
@@ -77,4 +78,22 @@ export function wpkhToWpkhSighashAll(
     new Uint8Array([0x01, 0x00, 0x00, 0x00]) // SIGHASH_ALL
   );
   return hash256(sighashPreimage);
+}
+
+
+export async function makeSignedTx(
+  outpoint,
+  inputPKH,
+  inputValue, // 8-byte LE
+  outputValue, // 8-byte LE
+  outputPKH
+) {
+  const tx = wpkhToWpkhTx(outpoint, inputPKH, outputValue, outputPKH);
+  const sighash = wpkhToWpkhSighashAll(outpoint, inputPKH, inputValue, outputValue, outputPKH);
+
+  const srvStr = await sigs.rawSign(sighash);
+  const pubkey = sigs.recoverPubkey(srvStr);
+  const signature = sigs.srvToDER(srvStr);
+
+  return appendWitness(tx, pubkey, signature);
 }

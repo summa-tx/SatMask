@@ -16,7 +16,7 @@ export function extractVRS(srvStr) {
 
   let s = utils.deserializeHex(utils.safeSlice(srv, 0, 64));
   let r = utils.deserializeHex(utils.safeSlice(srv, 64, 128));
-  const v = utils.safeSlice(srv, -1)[0];
+  const v = utils.safeSlice(srv, srv.length - 1)[0];
 
   // Trim to minimal encoding.
   // If there is a leading 0 and the next bit is 0, trim the lead.
@@ -59,7 +59,6 @@ export async function getPublicKey() {
   const currentAccount = await provider.enable()[0];
 
   return new Promise((resolve, reject) => {
-    // THIS IS BORKED
     const cb = (err, result) => {
       if (err) reject(err);
 
@@ -70,6 +69,27 @@ export async function getPublicKey() {
     provider.sendAsync({
       method: 'personal_sign',
       params: [currentAccount, message]
+    }, cb);
+  });
+}
+
+// expects a Uint8Array input
+// returns a hex string
+export async function rawSign(rawDigest) {
+  const provider = getProvider();
+  const hexDigest = utils.serializeHex(rawDigest);
+  const currentAccount = await provider.enable()[0];
+
+  return new Promise((resolve, reject) => {
+    const cb = (err, result) => {
+      if (err) reject(err);
+
+      const signature = result.result;
+      resolve(signature);
+    };
+    provider.sendAsync({
+      method: 'eth_sign',
+      params: [currentAccount, hexDigest]
     }, cb);
   });
 }
