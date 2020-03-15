@@ -91,7 +91,7 @@ export async function makeSignedTx(
   const sighash = wpkhToWpkhSighashAll(outpoint, inputPKH, inputValue, outputValue, outputPKH);
 
   const srvStr = await sigs.rawSign(sighash);
-  const pubkey = sigs.recoverPubkey(srvStr);
+  const pubkey = sigs.recoverPubkey(srvStr); // pubkey is wrong here
   const signature = sigs.srvToDER(srvStr);
 
   return appendWitness(tx, pubkey, signature);

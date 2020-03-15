@@ -1,11 +1,13 @@
-import { utils } from '@summa-tx/bitcoin-spv-js';
 import * as ethUtil from 'ethereumjs-util';
+import { publicKeyConvert } from 'secp256k1';
+import { utils } from '@summa-tx/bitcoin-spv-js';
 
 
 export function getProvider() {
   return window.ethereum;
 }
 
+// extracts v as number, RS as Uint8Arrays
 export function extractVRS(srvStr) {
   let srv = '';
   if (utils.safeSlice(srvStr, 0, 2) === '0x') {
@@ -29,9 +31,10 @@ export function extractVRS(srvStr) {
   return { v, r, s };
 }
 
+// recovers the COMPRESSED public key
 export function recoverPubkey(msgHash, srvStr) {
   const { v, r, s } = extractVRS(srvStr);
-  return ethUtil.ecrecover(msgHash, v, r, s);
+  return publicKeyConvert(ethUtil.ecrecover(msgHash, v, r, s));
 }
 
 export function recoverPersonal(message, srvStr) {
@@ -53,6 +56,7 @@ export function srvToDER(srvStr) {
   );
 }
 
+// Should be used on setup and you should key to state
 export async function getPublicKey() {
   const provider = getProvider();
   const message = 'Allow this page to view your Bitcoin public key.';
