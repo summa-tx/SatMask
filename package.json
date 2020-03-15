@@ -1,5 +1,5 @@
 {
-  "name": "satsmask",
+  "name": "satmask",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -65,10 +65,18 @@
     "webpack-manifest-plugin": "2.2.0",
     "workbox-webpack-plugin": "4.3.1"
   },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-plugin-import": "^2.18.0"
+  },
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
-    "test": "node scripts/test.js"
+    "test": "node scripts/test.js",
+    "lint": "eslint ./test ./src",
+    "lint:fix": "eslint --fix ./test ./src"
   },
   "eslintConfig": {
     "extends": "react-app"
