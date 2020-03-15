@@ -24,6 +24,26 @@ export function appendWitness(tx, pubkey, signature) {
   );
 }
 
+export function wpkhToWpkhTx(
+  outpoint,
+  inputPKH,
+  outputValue, // 8-byte LE
+  outputPKH
+) {
+  const outputScript = utils.concatUint8Arrays(
+    new Uint8Array([0x16, 0x00, 0x14]), // wpkh prefix
+    outputPKH
+  );
+  return utils.concatUint8Arrays(
+    new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01]), // version, flag, len(vin)
+    outpoint,
+    new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x01]), // nsequence and len(vout)
+    outputValue,
+    outputScript,
+    new Uint8Array([0x00, 0x00, 0x00, 0x00]) // nLockTime
+  );
+}
+
 export function wpkhToWpkhSighashAll(
   outpoint,
   inputPKH,
