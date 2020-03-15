@@ -27,7 +27,8 @@
   "dependencies": {
     "@summa-tx/bitcoin-spv-js": "^3.0.0",
     "bcoin": "git+https://github.com/bcoin-org/bcoin.git",
-    "ethereumjs-util": "^6.2.0"
+    "ethereumjs-util": "^6.2.0",
+    "secp256k1": "^3.8.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.6.0",
