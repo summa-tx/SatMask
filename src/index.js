@@ -1,3 +1,5 @@
 import * as utils from './utils';
+import * as tx from './tx';
 
-export default { utils };
+
+export default { tx, utils };

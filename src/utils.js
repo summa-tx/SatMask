@@ -1,7 +1,10 @@
-
 import { utils } from '@summa-tx/bitcoin-spv-js';
+import { ecrecover } from 'ethereumjs-util';
 
-export const SEVEN = 7;
+
+export function getProvider() {
+  return window.ethereum;
+}
 
 // Transform eth_sign result to a DER signature
 export function srvToDER(srvStr) {
@@ -31,4 +34,23 @@ export function srvToDER(srvStr) {
     encR,
     encS
   );
+}
+
+export function extractRS() {
+
+}
+
+export async function getPublicKey() {
+  const provider = getProvider();
+  const message = 'Allow this page to view your Bitcoin public key.';
+  const currentAccount = await provider.enable()[0];
+
+  // THIS IS BORKED
+  const cb = (result) => {
+    const signature = result.result;
+  };
+  provider.sendAsync({
+    method: 'personal_sign',
+    params: [currentAccount, message]
+  }, cb);
 }

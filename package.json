@@ -16,7 +16,9 @@
     "url": "git+https://github.com/summa-tx/SatMask.git"
   },
   "author": "Summa",
-  "contributors": ["James Prestwich <james@summa.one>"],
+  "contributors": [
+    "James Prestwich <james@summa.one>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/summa-tx/SatMask/issues"
@@ -24,7 +26,8 @@
   "homepage": "https://github.com/summa-tx/SatMask#readme",
   "dependencies": {
     "@summa-tx/bitcoin-spv-js": "^3.0.0",
-    "bcoin": "git+https://github.com/bcoin-org/bcoin.git"
+    "bcoin": "git+https://github.com/bcoin-org/bcoin.git",
+    "ethereumjs-util": "^6.2.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.6.0",
