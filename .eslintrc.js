@@ -5,7 +5,7 @@ module.exports = {
     es6: true,
   },
   extends: [
-    'airbnb-base',
+    'airbnb',
   ],
   globals: {
     Atomics: 'readonly',
@@ -15,7 +15,8 @@ module.exports = {
     ecmaVersion: 2018,
   },
   rules: {
-    "comma-dangle": 'off',
-    "no-bitwise": 'off'
+    'comma-dangle': 'off',
+    'no-bitwise': 'off',
+    'react/jsx-filename-extension': 'off'
   },
 };
