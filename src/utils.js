@@ -6,16 +6,17 @@ export function getProvider() {
   return window.ethereum;
 }
 
-// Transform eth_sign result to a DER signature
-export function srvToDER(srvStr) {
+export function extractVRS(srvStr) {
   let srv = '';
   if (utils.safeSlice(srvStr, 0, 2) === '0x') {
     srv = utils.safeSlice(srvStr, 2);
   } else {
     srv = srvStr;
   }
+
   let s = utils.deserializeHex(utils.safeSlice(srv, 0, 64));
   let r = utils.deserializeHex(utils.safeSlice(srv, 64, 128));
+  const v = utils.safeSlice(srv, -1)[0];
 
   // Trim to minimal encoding.
   // If there is a leading 0 and the next bit is 0, trim the lead.
@@ -25,6 +26,17 @@ export function srvToDER(srvStr) {
   while (r[0] === 0 && r[1] & 0x80 !== 0) {
     r = utils.safeSlice(r, 1);
   }
+  return { v, r, s };
+}
+
+export function recoverPubkey(msgHash, srvStr) {
+  const { v, r, s } = extractVRS(srvStr);
+  return ecrecover(msgHash, v, r, s);
+}
+
+// Transform eth_sign result to a DER signature
+export function srvToDER(srvStr) {
+  const { r, s } = extractVRS(srvStr);
 
   const encR = utils.concatUint8Arrays(new Uint8Array([0x02, r.length]), r);
   const encS = utils.concatUint8Arrays(new Uint8Array([0x02, s.length]), s);
@@ -34,10 +46,6 @@ export function srvToDER(srvStr) {
     encR,
     encS
   );
-}
-
-export function extractRS() {
-
 }
 
 export async function getPublicKey() {
