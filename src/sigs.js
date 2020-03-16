@@ -1,6 +1,10 @@
+/* global BigInt */
 import * as ethUtil from 'ethereumjs-util';
 import { publicKeyConvert } from 'secp256k1';
 import { utils } from '@summa-tx/bitcoin-spv-js';
+
+
+export const CURVE_ORDER = BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141');
 
 
 export function getProvider() {
@@ -8,12 +12,12 @@ export function getProvider() {
 }
 
 // extracts v as number, RS as Uint8Arrays
-export function extractVRS(srvStr) {
+export function extractVRS(rsvStr) {
   let srv = '';
-  if (utils.safeSlice(srvStr, 0, 2) === '0x') {
-    srv = utils.safeSlice(srvStr, 2);
+  if (utils.safeSlice(rsvStr, 0, 2) === '0x') {
+    srv = utils.safeSlice(rsvStr, 2);
   } else {
-    srv = srvStr;
+    srv = rsvStr;
   }
 
   const r = utils.deserializeHex(utils.safeSlice(srv, 0, 64));
@@ -24,8 +28,8 @@ export function extractVRS(srvStr) {
 }
 
 // recovers the COMPRESSED public key
-export function recoverPubkey(msgHash, srvStr) {
-  const { v, r, s } = extractVRS(srvStr);
+export function recoverPubkey(msgHash, rsvStr) {
+  const { v, r, s } = extractVRS(rsvStr);
   const rawKey = ethUtil.ecrecover(
     Buffer.from(msgHash),
     v,
@@ -39,15 +43,24 @@ export function recoverPubkey(msgHash, srvStr) {
   return publicKeyConvert(Buffer.from(prefixedKey));
 }
 
-export function recoverPersonal(message, srvStr) {
+export function recoverPersonal(message, rsvStr) {
   const msgBuf = Buffer.from(message, 'utf-8');
   const msgHash = ethUtil.hashPersonalMessage(msgBuf);
-  return recoverPubkey(msgHash, srvStr);
+  return recoverPubkey(msgHash, rsvStr);
 }
 
 // Transform eth_sign result to a DER signature
-export function srvToDER(srvStr) {
-  let { r, s } = extractVRS(srvStr);
+export function srvToDER(rsvStr) {
+  let { r, s } = extractVRS(rsvStr);
+
+  // If S is non-canoncial, lower it
+  let sBigInt = utils.bytesToUint(s);
+  console.log({ sBigInt });
+  console.log({ half: CURVE_ORDER / BigInt(2) });
+  if (sBigInt > CURVE_ORDER / BigInt(2)) {
+    sBigInt = CURVE_ORDER - sBigInt;
+    s = utils.deserializeHex((sBigInt.toString(16)));
+  }
 
   // Trim to minimal encoding.
   // If there is a leading 0 and the next bit is 0, trim the lead.

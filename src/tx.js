@@ -7,9 +7,9 @@ function hash256(buf) {
 
 export function wpkhWitness(pubkey, signature) {
   return utils.concatUint8Arrays(
-    new Uint8Array([0x02, signature.length]),
+    new Uint8Array([0x02, signature.length + 1]),
     signature,
-    new Uint8Array([33]), // always 33 bytes
+    new Uint8Array([0x01, 33]), // SIGHASH_ALL + pubkey is always 33 bytes
     pubkey
   );
 }
@@ -37,7 +37,7 @@ export function wpkhToWpkhTx(
   return utils.concatUint8Arrays(
     new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01]), // version, flag, len(vin)
     outpoint,
-    new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x01]), // nsequence and len(vout)
+    new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x01]), // 0 scriptSig, nsequence and len(vout)
     outputValue,
     outputScript,
     new Uint8Array([0x00, 0x00, 0x00, 0x00]) // nLockTime
@@ -92,6 +92,6 @@ export async function makeSignedTx(
   const srvStr = await sigs.rawSign(sighash);
   const pubkey = sigs.recoverPubkey(sighash, srvStr); // pubkey is wrong here
   const signature = sigs.srvToDER(srvStr);
-
+  console.log({ signature: utils.serializeHex(signature) });
   return appendWitness(tx, pubkey, signature);
 }

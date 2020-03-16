@@ -13,6 +13,7 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
+      address: '',
       publicKey: '',
       outpoint: '',
       inputValue: '',
@@ -27,8 +28,9 @@ class App extends Component {
   // TODO(starscream): could make this on pageload
   // using componentDidMount after bugs are sorted out
   async getPublicKey() {
-    this.state.publicKey = utils.serializeHex(await sigs.getPublicKey());
-    console.log(this.state.publicKey);
+    const publicKey = utils.serializeHex(await sigs.getPublicKey());
+    this.setState({ publicKey: publicKey });
+    this.setState({ address: this.state.pubkey });
   }
 
   async submit() {
@@ -58,6 +60,7 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
+
           <Button
             variant="contained"
             color="primary"
