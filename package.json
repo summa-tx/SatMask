@@ -142,7 +142,6 @@
       "jest-watch-typeahead/testname"
     ]
   },
-  "homepage": "https://github.com/summa-tx/SatMask#readme",
   "babel": {
     "presets": [
       "react-app"
