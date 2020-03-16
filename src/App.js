@@ -1,7 +1,8 @@
+/* eslint-disable */
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
-// import * as tx from './tx';
+import * as tx from './tx';
 
 function App() {
   return (
