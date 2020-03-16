@@ -16,9 +16,38 @@ export function extractVRS(srvStr) {
     srv = srvStr;
   }
 
-  let s = utils.deserializeHex(utils.safeSlice(srv, 0, 64));
-  let r = utils.deserializeHex(utils.safeSlice(srv, 64, 128));
-  const v = utils.safeSlice(srv, srv.length - 1)[0];
+  const r = utils.deserializeHex(utils.safeSlice(srv, 0, 64));
+  const s = utils.deserializeHex(utils.safeSlice(srv, 64, 128));
+  const v = utils.deserializeHex(utils.safeSlice(srv, srv.length - 2))[0];
+
+  return { v, r, s };
+}
+
+// recovers the COMPRESSED public key
+export function recoverPubkey(msgHash, srvStr) {
+  const { v, r, s } = extractVRS(srvStr);
+  const rawKey = ethUtil.ecrecover(
+    Buffer.from(msgHash),
+    v,
+    Buffer.from(r),
+    Buffer.from(s)
+  );
+  const prefixedKey = utils.concatUint8Arrays(
+    new Uint8Array([0x04]),
+    rawKey
+  );
+  return publicKeyConvert(Buffer.from(prefixedKey));
+}
+
+export function recoverPersonal(message, srvStr) {
+  const msgBuf = Buffer.from(message, 'utf-8');
+  const msgHash = ethUtil.hashPersonalMessage(msgBuf);
+  return recoverPubkey(msgHash, srvStr);
+}
+
+// Transform eth_sign result to a DER signature
+export function srvToDER(srvStr) {
+  let { r, s } = extractVRS(srvStr);
 
   // Trim to minimal encoding.
   // If there is a leading 0 and the next bit is 0, trim the lead.
@@ -28,23 +57,6 @@ export function extractVRS(srvStr) {
   while (r[0] === 0 && r[1] & 0x80 !== 0) {
     r = utils.safeSlice(r, 1);
   }
-  return { v, r, s };
-}
-
-// recovers the COMPRESSED public key
-export function recoverPubkey(msgHash, srvStr) {
-  const { v, r, s } = extractVRS(srvStr);
-  return publicKeyConvert(ethUtil.ecrecover(msgHash, v, r, s));
-}
-
-export function recoverPersonal(message, srvStr) {
-  const msgHash = ethUtil.hashPersonalMessage(message);
-  return recoverPubkey(msgHash, srvStr);
-}
-
-// Transform eth_sign result to a DER signature
-export function srvToDER(srvStr) {
-  const { r, s } = extractVRS(srvStr);
 
   const encR = utils.concatUint8Arrays(new Uint8Array([0x02, r.length]), r);
   const encS = utils.concatUint8Arrays(new Uint8Array([0x02, s.length]), s);
@@ -60,15 +72,15 @@ export function srvToDER(srvStr) {
 export async function getPublicKey() {
   const provider = getProvider();
   const message = 'Allow this page to view your Bitcoin public key.';
-  const currentAccount = await provider.enable()[0];
+  const currentAccount = (await provider.enable())[0];
 
   return new Promise((resolve, reject) => {
     const cb = (err, result) => {
-      if (err) reject(err);
+      if (err) return reject(err);
 
       const signature = result.result;
       const pubkey = recoverPersonal(message, signature);
-      resolve(pubkey);
+      return resolve(pubkey);
     };
     provider.sendAsync({
       method: 'personal_sign',
@@ -82,14 +94,14 @@ export async function getPublicKey() {
 export async function rawSign(rawDigest) {
   const provider = getProvider();
   const hexDigest = utils.serializeHex(rawDigest);
-  const currentAccount = await provider.enable()[0];
+  const currentAccount = (await provider.enable())[0];
 
   return new Promise((resolve, reject) => {
     const cb = (err, result) => {
-      if (err) reject(err);
+      if (err) return reject(err);
 
       const signature = result.result;
-      resolve(signature);
+      return resolve(signature);
     };
     provider.sendAsync({
       method: 'eth_sign',
