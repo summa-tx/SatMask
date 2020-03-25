@@ -1,10 +1,12 @@
 import { utils } from '@summa-tx/bitcoin-spv-js';
 import * as sigs from './sigs';
 
+// Double SHA256. Used in many bitcoin operations.
 function hash256(buf) {
   return utils.sha256(utils.sha256(buf));
 }
 
+// Build a witness from a pubkey and a signature
 export function wpkhWitness(pubkey, signature) {
   return utils.concatUint8Arrays(
     new Uint8Array([0x02, signature.length + 1]),
@@ -14,6 +16,7 @@ export function wpkhWitness(pubkey, signature) {
   );
 }
 
+// Append a witness built from a pubkey and a signature to the transaction
 export function appendWitness(tx, pubkey, signature) {
   const timelock = utils.safeSlice(tx, tx.length - 4);
   const body = utils.safeSlice(tx, 0, tx.length - 4);
@@ -24,6 +27,8 @@ export function appendWitness(tx, pubkey, signature) {
   );
 }
 
+// Build an unsigned transaction that spends a specified input and creates a
+// specified output.
 export function wpkhToWpkhTx(
   outpoint,
   inputPKH,
@@ -44,6 +49,7 @@ export function wpkhToWpkhTx(
   );
 }
 
+// Calculate the sighash for the 0th input of a 1-input 1-output tx.
 export function wpkhToWpkhSighashAll(
   outpoint,
   inputPKH,
@@ -79,7 +85,8 @@ export function wpkhToWpkhSighashAll(
   return hash256(sighashPreimage);
 }
 
-
+// Builds a signed transaction that spends a specified input and creates a
+// specified output. This is the core business logic of the Bitcoin signer.
 export async function makeSignedTx(
   outpoint,
   inputPKH,
@@ -87,11 +94,21 @@ export async function makeSignedTx(
   outputValue, // 8-byte LE
   outputPKH
 ) {
+  // Make a transaction
   const tx = wpkhToWpkhTx(outpoint, inputPKH, outputValue, outputPKH);
+
+  // Calculate its sighash
   const sighash = wpkhToWpkhSighashAll(outpoint, inputPKH, inputValue, outputValue, outputPKH);
-  const srvStr = await sigs.rawSign(sighash);
-  const pubkey = sigs.recoverPubkey(sighash, srvStr); // pubkey is wrong here
-  const signature = sigs.srvToDER(srvStr);
-  console.log({ signature: utils.serializeHex(signature) });
+
+  // Get an RSV signture on that sighash
+  const rsvStr = await sigs.rawSign(sighash);
+
+  // Recover the public key from the signature
+  const pubkey = sigs.recoverPubkey(sighash, rsvStr);
+
+  // Translate the signature to DER-encoding for use in Bitcoin
+  const signature = sigs.rsvToDER(rsvStr);
+
+  // Append the signature to the transaction.
   return appendWitness(tx, pubkey, signature);
 }

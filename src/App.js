@@ -35,13 +35,18 @@ class App extends Component {
 
   async submit() {
     if (!this.state.publicKey || this.state.publicKey.length === 0) await this.getPublicKey();
+
+    // Get the input PKH based on the current MetaMask account
     const pubkey = utils.deserializeHex(this.state.publicKey);
     const inputPKH = utils.ripemd160(utils.sha256(pubkey));
 
+    // Accept user input for tx specification
     const outpoint = utils.deserializeHex(this.state.outpoint);
     const inputValue = utils.deserializeHex(this.state.inputValue);
     const outputValue = utils.deserializeHex(this.state.outputValue);
     const outputPKH = utils.deserializeHex(this.state.outputPKH);
+
+    // Make the signed transaction from user input
     const signedTx = await tx.makeSignedTx(
       outpoint,
       inputPKH,

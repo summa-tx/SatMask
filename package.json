@@ -1,5 +1,6 @@
 {
   "name": "satmask",
+  "author": "James Prestwich <james@summa.one> (https://summa.one)",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
